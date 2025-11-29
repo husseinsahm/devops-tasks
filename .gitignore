@@ -1,0 +1,10 @@
+# Terraform directories
+.terraform/
+**/.terraform/*
+terraform.tfstate
+terraform.tfstate.backup
+*.tfstate
+*.backup
+
+# Provider plugins
+**/.terraform/providers/
