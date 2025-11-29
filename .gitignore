@@ -15,7 +15,7 @@ terraform.tfstate.backup
 .terraform.lock.hcl
 
 # Sensitive variable files
-*.tfvars
+#*.tfvars
 
 # Crash and debug logs
 *.log
