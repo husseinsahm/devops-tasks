@@ -9,7 +9,7 @@ spec:
   selector:
     app: postgres
 
----
+------ 1111----
 
 apiVersion: apps/v1
 kind: StatefulSet
