@@ -1,0 +1,10 @@
+flask:
+  image: husseinsahm/lib-flask-app:latest
+  replicas: 2
+
+postgres:
+  image: postgres:15
+  storage: 1Gi
+  username: postgres
+  password: postgres123
+  database: librarydb

@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: flask-app
+  labels:
+    app: flask
+spec:
+  containers:
+    - name: flask-app
+      # image: flask-app-image:latest
+      # imagePullPolicy: Never
+      image: husseinsahm/lib-flask-app:latest
+      imagePullPolicy: IfNotPresent
+      ports:
+        - containerPort: 5000
