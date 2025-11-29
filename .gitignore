@@ -1,6 +1,8 @@
 # Terraform directories
 .terraform/
 **/.terraform/*
+
+# State files
 terraform.tfstate
 terraform.tfstate.backup
 *.tfstate
@@ -8,3 +10,14 @@ terraform.tfstate.backup
 
 # Provider plugins
 **/.terraform/providers/
+
+# Lock file
+.terraform.lock.hcl
+
+# Sensitive variable files
+*.tfvars
+
+# Crash and debug logs
+*.log
+*.crash
+crash.log
