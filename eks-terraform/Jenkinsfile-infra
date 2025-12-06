@@ -19,18 +19,22 @@ pipeline {
                 checkout scm
             }
         }
-
+        
         stage('Install Terraform') {
             steps {
                 echo "⬇ Installing Terraform..."
                 sh """
+                    sudo apt-get update -y
+                    sudo apt-get install unzip -y
+
                     curl -o terraform.zip https://releases.hashicorp.com/terraform/${TF_VERSION}/terraform_${TF_VERSION}_linux_amd64.zip
                     unzip terraform.zip
                     sudo mv terraform /usr/local/bin/
                     terraform version
-                """
+              """
             }
         }
+
 
         stage('Terraform Init') {
             steps {
