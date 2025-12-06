@@ -40,7 +40,7 @@ pipeline {
                 echo "📊 Terraform plan..."
                 sh """
                     cd eks-terraform
-                    terraform plan -out=tfplan
+                    terraform plan -var-file=terraform.tfvars -out=tfplan
                 """
             }
         }
@@ -50,10 +50,11 @@ pipeline {
                 echo "⚡ Terraform apply..."
                 sh """
                     cd eks-terraform
-                    terraform apply -auto-approve tfplan
+                    terraform apply -var-file=terraform.tfvars -auto-approve tfplan
                 """
             }
         }
+
 
     }
 
