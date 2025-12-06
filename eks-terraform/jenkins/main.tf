@@ -26,7 +26,7 @@ resource "aws_security_group" "jenkins_sg" {
 }
 
 resource "aws_instance" "jenkins_server" {
-  ami           = "ami-0c7217cdde317cfec"   # Amazon Linux 2
+  ami           = "ami-076431be05aaf8080"   # Amazon Linux 2
   instance_type = "t3.small"
   subnet_id     = var.public_subnet_id
   vpc_security_group_ids = [aws_security_group.jenkins_sg.id]

@@ -33,12 +33,12 @@ module "eks" {
   private_subnet_ids = module.vpc.private_subnet_ids
 }
 
-module "jenkins" {
-  source = "./jenkins"
-
-  project_name     = var.project_name
-  env              = var.env
-  public_subnet_id = module.vpc.public_subnet_ids[0]
-  vpc_id           = module.vpc.vpc_id
-  aws_region       = var.aws_region
-}
+# module "jenkins" {
+#   source = "./jenkins"
+# 
+#   project_name     = var.project_name
+#   env              = var.env
+#   public_subnet_id = module.vpc.public_subnet_ids[0]
+#   vpc_id           = module.vpc.vpc_id
+#   aws_region       = var.aws_region
+# }
