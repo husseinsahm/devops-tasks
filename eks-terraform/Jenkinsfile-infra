@@ -1,16 +1,24 @@
 pipeline {
     agent any
 
+    options {
+        ansiColor('xterm')       // Enable colors
+        timestamps()             // Add timestamps to logs
+        disableConcurrentBuilds() // Prevent running multiple infra builds
+    }
+
     environment {
         AWS_ACCESS_KEY_ID     = credentials('aws-creds')
         AWS_SECRET_ACCESS_KEY = credentials('aws-creds')
         AWS_REGION            = "us-east-1"
+        TF_WORKSPACE          = "default"
     }
 
     stages {
 
         stage('Checkout Code') {
             steps {
+                echo "\033[1;34m📥 Checking out repository...\033[0m"
                 git branch: 'main',
                     url: 'https://github.com/husseinsahm/devops-tasks.git'
             }
@@ -18,35 +26,44 @@ pipeline {
 
         stage('Terraform Init') {
             steps {
-                dir("terraform") {
-                    sh """
-                        terraform init
-                    """
+                dir('eks-terraform') {
+                    echo "\033[1;33m🚀 Running Terraform Init...\033[0m"
+                    sh 'terraform init -input=false'
                 }
             }
         }
 
         stage('Terraform Validate') {
             steps {
-                dir("terraform") {
-                    sh "terraform validate"
+                dir('eks-terraform') {
+                    echo "\033[1;36m🔍 Validating Terraform configuration...\033[0m"
+                    sh 'terraform validate'
                 }
             }
         }
 
         stage('Terraform Plan') {
             steps {
-                dir("terraform") {
-                    sh "terraform plan -out=tfplan"
+                dir('eks-terraform') {
+                    echo "\033[1;35m📝 Creating Terraform Plan...\033[0m"
+                    sh 'terraform plan -out=tfplan'
                 }
             }
         }
 
-        stage('Approval to Apply') {
+        stage('Approval Before Apply') {
             steps {
                 script {
-                    timeout(time: 10, unit: 'MINUTES') {
-                        input message: "Do you want to apply Terraform changes?"
+                    def userInput = input(
+                        id: 'Proceed',
+                        message: "\033[1;33m⚠️ Do you want to Apply Terraform changes?\033[0m",
+                        parameters: [
+                            [$class: 'BooleanParameterDefinition', defaultValue: false, description: 'Apply changes?', name: 'Approve']
+                        ]
+                    )
+
+                    if (!userInput) {
+                        error("\033[1;31m❌ Terraform apply aborted by user.\033[0m")
                     }
                 }
             }
@@ -54,15 +71,30 @@ pipeline {
 
         stage('Terraform Apply') {
             steps {
-                dir("terraform") {
-                    sh "terraform apply -auto-approve tfplan"
+                dir('eks-terraform') {
+                    echo "\033[1;32m🚧 Applying Terraform Plan...\033[0m"
+                    sh 'terraform apply -auto-approve tfplan'
                 }
             }
         }
-    }
+
+        stage('Show Outputs') {
+            steps {
+                dir('eks-terraform') {
+                    echo "\033[1;34m📤 Terraform Outputs:\033[0m"
+                    sh 'terraform output'
+                }
+            }
+        }
+
+    } // end stages
 
     post {
-        success { echo "Infrastructure deployed successfully!" }
-        failure { echo "Infrastructure deployment failed!" }
+        success {
+            echo "\033[1;32m🎉 Infrastructure deployed successfully!\033[0m"
+        }
+        failure {
+            echo "\033[1;31m💥 Infrastructure deployment failed!\033[0m"
+        }
     }
 }
