@@ -1,6 +1,10 @@
 pipeline {
     agent any
 
+    environment {
+        TF_VERSION = "1.9.8"
+    }
+
     options {
         timestamps()
         disableConcurrentBuilds()
@@ -17,17 +21,26 @@ pipeline {
 
         stage('Terraform Init') {
             steps {
-                echo "🚀 Terraform init..."
-                sh """
-                    cd eks-terraform
-                    terraform init
-                """
+
+                withCredentials([
+                    usernamePassword(
+                        credentialsId: 'aws-creds',
+                        usernameVariable: 'AWS_ACCESS_KEY_ID',
+                        passwordVariable: 'AWS_SECRET_ACCESS_KEY'
+                    )
+                ]) {
+
+                    echo "🚀 Initializing Terraform..."
+                    sh """
+                        cd eks-terraform
+                        terraform init
+                    """
+                }
             }
         }
 
         stage('Terraform Validate') {
             steps {
-                echo "🧪 Terraform validate..."
                 sh """
                     cd eks-terraform
                     terraform validate
@@ -37,29 +50,51 @@ pipeline {
 
         stage('Terraform Plan') {
             steps {
-                echo "📊 Terraform plan..."
-                sh """
-                    cd eks-terraform
-                    terraform plan -var-file=terraform.tfvars -out=tfplan
-                """
+
+                withCredentials([
+                    usernamePassword(
+                        credentialsId: 'aws-creds',
+                        usernameVariable: 'AWS_ACCESS_KEY_ID',
+                        passwordVariable: 'AWS_SECRET_ACCESS_KEY'
+                    )
+                ]) {
+
+                    echo "📊 Running Terraform Plan..."
+                    sh """
+                        cd eks-terraform
+                        terraform plan -var-file=terraform.tfvars -out=tfplan
+                    """
+                }
             }
         }
 
         stage('Terraform Apply') {
             steps {
-                echo "⚡ Terraform apply..."
-                sh """
-                    cd eks-terraform
-                    terraform apply -var-file=terraform.tfvars -auto-approve tfplan
-                """
+
+                withCredentials([
+                    usernamePassword(
+                        credentialsId: 'aws-creds',
+                        usernameVariable: 'AWS_ACCESS_KEY_ID',
+                        passwordVariable: 'AWS_SECRET_ACCESS_KEY'
+                    )
+                ]) {
+
+                    echo "⚡ Applying Terraform..."
+                    sh """
+                        cd eks-terraform
+                        terraform apply -auto-approve tfplan
+                    """
+                }
             }
         }
-
-
     }
 
     post {
-        success { echo "🎉 Terraform Infrastructure Deployment Completed Successfully!" }
-        failure { echo "❌ Terraform Deployment Failed!" }
+        success {
+            echo "🎉 Terraform Infrastructure Deployment Completed Successfully!"
+        }
+        failure {
+            echo "❌ Terraform Deployment Failed!"
+        }
     }
 }
