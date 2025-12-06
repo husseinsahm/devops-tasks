@@ -46,15 +46,17 @@ resource "aws_eks_cluster" "eks" {
   role_arn = aws_iam_role.eks_cluster_role.arn
 
   vpc_config {
-    subnet_ids         = var.private_subnet_ids
-    endpoint_private_access = true
+    subnet_ids              = var.private_subnet_ids
+    endpoint_private_access = false
     endpoint_public_access  = true
+    public_access_cidrs     = ["0.0.0.0/0"]
   }
 
   depends_on = [
     aws_iam_role_policy_attachment.cluster_policy
   ]
 }
+
 
 ############################################################
 # IAM ROLE FOR NODE GROUP
