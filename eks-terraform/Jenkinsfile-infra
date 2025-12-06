@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     options {
-        timestamps()       // OK
+        timestamps()
         disableConcurrentBuilds()
     }
 
@@ -13,75 +13,54 @@ pipeline {
 
     stages {
 
-        stage('Init Colors') {
-            steps {
-                script {
-                    ansi = { msg -> echo "\u001B[36m$msg\u001B[0m" }
-                }
-            }
-        }
-
         stage('Checkout') {
             steps {
-                wrap([$class: 'AnsiColorBuildWrapper', colorMapName: 'xterm']) {
-                    ansi("📥 Checking out repository...")
-                    checkout scm
-                }
+                echo "📥 Checking out code..."
+                checkout scm
             }
         }
 
         stage('Install Terraform') {
             steps {
-                wrap([$class: 'AnsiColorBuildWrapper', colorMapName: 'xterm']) {
-                    ansi("⬇ Installing Terraform…")
-
-                    sh """
-                        curl -o terraform.zip https://releases.hashicorp.com/terraform/${TF_VERSION}/terraform_${TF_VERSION}_linux_amd64.zip
-                        unzip terraform.zip
-                        sudo mv terraform /usr/local/bin/
-                        terraform version
-                    """
-                }
+                echo "⬇ Installing Terraform..."
+                sh """
+                    curl -o terraform.zip https://releases.hashicorp.com/terraform/${TF_VERSION}/terraform_${TF_VERSION}_linux_amd64.zip
+                    unzip terraform.zip
+                    sudo mv terraform /usr/local/bin/
+                    terraform version
+                """
             }
         }
 
         stage('Terraform Init') {
             steps {
-                wrap([$class: 'AnsiColorBuildWrapper', colorMapName: 'xterm']) {
-                    ansi("🚀 Running terraform init…")
-                    sh "terraform init"
-                }
+                echo "🚀 Terraform init..."
+                sh "terraform init"
             }
         }
 
         stage('Terraform Validate') {
             steps {
-                wrap([$class: 'AnsiColorBuildWrapper', colorMapName: 'xterm']) {
-                    ansi("🧪 Validating Terraform code…")
-                    sh "terraform validate"
-                }
+                echo "🧪 Terraform validate..."
+                sh "terraform validate"
             }
         }
 
         stage('Terraform Plan') {
             steps {
-                wrap([$class: 'AnsiColorBuildWrapper', colorMapName: 'xterm']) {
-                    ansi("📊 Running terraform plan…")
-                    sh "terraform plan -out=tfplan"
-                }
+                echo "📊 Terraform plan..."
+                sh "terraform plan -out=tfplan"
             }
         }
 
         stage('Terraform Apply') {
             steps {
-                wrap([$class: 'AnsiColorBuildWrapper', colorMapName: 'xterm']) {
-                    ansi("⚡ Applying Terraform changes…")
-                    sh "terraform apply -auto-approve tfplan"
-                }
+                echo "⚡ Terraform apply..."
+                sh "terraform apply -auto-approve tfplan"
             }
         }
 
-    } // stages end
+    }
 
     post {
         success {
