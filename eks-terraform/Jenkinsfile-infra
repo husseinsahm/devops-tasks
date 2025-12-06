@@ -6,11 +6,6 @@ pipeline {
         disableConcurrentBuilds()
     }
 
-    environment {
-        TF_VERSION = "1.9.8"
-        AWS_REGION = "eu-west-1"
-    }
-
     stages {
 
         stage('Checkout') {
@@ -19,22 +14,6 @@ pipeline {
                 checkout scm
             }
         }
-        
-        stage('Install Terraform') {
-            steps {
-                echo "⬇ Installing Terraform..."
-                sh """
-                    apt-get update -y
-                    apt-get install unzip -y
-
-                    curl -o terraform.zip https://releases.hashicorp.com/terraform/${TF_VERSION}/terraform_${TF_VERSION}_linux_amd64.zip
-                    unzip terraform.zip
-                    mv terraform /usr/local/bin/
-                    terraform version
-              """
-            }
-        }
-
 
         stage('Terraform Init') {
             steps {
@@ -67,11 +46,7 @@ pipeline {
     }
 
     post {
-        success {
-            echo "🎉 Terraform Infrastructure Deployment Completed Successfully!"
-        }
-        failure {
-            echo "❌ Terraform Deployment Failed!"
-        }
+        success { echo "🎉 Terraform Infrastructure Deployment Completed Successfully!" }
+        failure { echo "❌ Terraform Deployment Failed!" }
     }
 }
