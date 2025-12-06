@@ -18,28 +18,40 @@ pipeline {
         stage('Terraform Init') {
             steps {
                 echo "🚀 Terraform init..."
-                sh "terraform init"
+                sh """
+                    cd eks-terraform
+                    terraform init
+                """
             }
         }
 
         stage('Terraform Validate') {
             steps {
                 echo "🧪 Terraform validate..."
-                sh "terraform validate"
+                sh """
+                    cd eks-terraform
+                    terraform validate
+                """
             }
         }
 
         stage('Terraform Plan') {
             steps {
                 echo "📊 Terraform plan..."
-                sh "terraform plan -out=tfplan"
+                sh """
+                    cd eks-terraform
+                    terraform plan -out=tfplan
+                """
             }
         }
 
         stage('Terraform Apply') {
             steps {
                 echo "⚡ Terraform apply..."
-                sh "terraform apply -auto-approve tfplan"
+                sh """
+                    cd eks-terraform
+                    terraform apply -auto-approve tfplan
+                """
             }
         }
 
