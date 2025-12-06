@@ -2,99 +2,93 @@ pipeline {
     agent any
 
     options {
-        ansiColor('xterm')       // Enable colors
-        timestamps()             // Add timestamps to logs
-        disableConcurrentBuilds() // Prevent running multiple infra builds
+        timestamps()       // OK
+        disableConcurrentBuilds()
     }
 
     environment {
-        AWS_ACCESS_KEY_ID     = credentials('aws-creds')
-        AWS_SECRET_ACCESS_KEY = credentials('aws-creds')
-        AWS_REGION            = "us-east-1"
-        TF_WORKSPACE          = "default"
+        TF_VERSION = "1.9.8"
+        AWS_REGION = "eu-west-1"
     }
 
     stages {
 
-        stage('Checkout Code') {
+        stage('Init Colors') {
             steps {
-                echo "\033[1;34m📥 Checking out repository...\033[0m"
-                git branch: 'main',
-                    url: 'https://github.com/husseinsahm/devops-tasks.git'
+                script {
+                    ansi = { msg -> echo "\u001B[36m$msg\u001B[0m" }
+                }
+            }
+        }
+
+        stage('Checkout') {
+            steps {
+                wrap([$class: 'AnsiColorBuildWrapper', colorMapName: 'xterm']) {
+                    ansi("📥 Checking out repository...")
+                    checkout scm
+                }
+            }
+        }
+
+        stage('Install Terraform') {
+            steps {
+                wrap([$class: 'AnsiColorBuildWrapper', colorMapName: 'xterm']) {
+                    ansi("⬇ Installing Terraform…")
+
+                    sh """
+                        curl -o terraform.zip https://releases.hashicorp.com/terraform/${TF_VERSION}/terraform_${TF_VERSION}_linux_amd64.zip
+                        unzip terraform.zip
+                        sudo mv terraform /usr/local/bin/
+                        terraform version
+                    """
+                }
             }
         }
 
         stage('Terraform Init') {
             steps {
-                dir('eks-terraform') {
-                    echo "\033[1;33m🚀 Running Terraform Init...\033[0m"
-                    sh 'terraform init -input=false'
+                wrap([$class: 'AnsiColorBuildWrapper', colorMapName: 'xterm']) {
+                    ansi("🚀 Running terraform init…")
+                    sh "terraform init"
                 }
             }
         }
 
         stage('Terraform Validate') {
             steps {
-                dir('eks-terraform') {
-                    echo "\033[1;36m🔍 Validating Terraform configuration...\033[0m"
-                    sh 'terraform validate'
+                wrap([$class: 'AnsiColorBuildWrapper', colorMapName: 'xterm']) {
+                    ansi("🧪 Validating Terraform code…")
+                    sh "terraform validate"
                 }
             }
         }
 
         stage('Terraform Plan') {
             steps {
-                dir('eks-terraform') {
-                    echo "\033[1;35m📝 Creating Terraform Plan...\033[0m"
-                    sh 'terraform plan -out=tfplan'
-                }
-            }
-        }
-
-        stage('Approval Before Apply') {
-            steps {
-                script {
-                    def userInput = input(
-                        id: 'Proceed',
-                        message: "\033[1;33m⚠️ Do you want to Apply Terraform changes?\033[0m",
-                        parameters: [
-                            [$class: 'BooleanParameterDefinition', defaultValue: false, description: 'Apply changes?', name: 'Approve']
-                        ]
-                    )
-
-                    if (!userInput) {
-                        error("\033[1;31m❌ Terraform apply aborted by user.\033[0m")
-                    }
+                wrap([$class: 'AnsiColorBuildWrapper', colorMapName: 'xterm']) {
+                    ansi("📊 Running terraform plan…")
+                    sh "terraform plan -out=tfplan"
                 }
             }
         }
 
         stage('Terraform Apply') {
             steps {
-                dir('eks-terraform') {
-                    echo "\033[1;32m🚧 Applying Terraform Plan...\033[0m"
-                    sh 'terraform apply -auto-approve tfplan'
+                wrap([$class: 'AnsiColorBuildWrapper', colorMapName: 'xterm']) {
+                    ansi("⚡ Applying Terraform changes…")
+                    sh "terraform apply -auto-approve tfplan"
                 }
             }
         }
 
-        stage('Show Outputs') {
-            steps {
-                dir('eks-terraform') {
-                    echo "\033[1;34m📤 Terraform Outputs:\033[0m"
-                    sh 'terraform output'
-                }
-            }
-        }
-
-    } // end stages
+    } // stages end
 
     post {
         success {
-            echo "\033[1;32m🎉 Infrastructure deployed successfully!\033[0m"
+            echo "🎉 Terraform Infrastructure Deployment Completed Successfully!"
         }
         failure {
-            echo "\033[1;31m💥 Infrastructure deployment failed!\033[0m"
+            echo "❌ Terraform Deployment Failed!"
         }
     }
 }
