@@ -1,4 +1,4 @@
-aws_region = "us-east-1"
+aws_region = "eu-west-1"
 
 project_name = "myapp"
 env          = "prod"
@@ -16,6 +16,6 @@ private_subnet_cidrs = [
 ]
 
 availability_zones = [
-  "us-east-1a",
-  "us-east-1b"
+  "eu-west-1a",
+  "eu-west-1b"
 ]

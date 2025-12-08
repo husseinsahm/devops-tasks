@@ -1,5 +1,5 @@
 ############################################################
-# EKS MODULE - MAIN FILE
+# PROVIDER
 ############################################################
 
 provider "aws" {
@@ -14,7 +14,6 @@ data "aws_iam_policy_document" "eks_assume_role" {
   statement {
     effect  = "Allow"
     actions = ["sts:AssumeRole"]
-
     principals {
       type        = "Service"
       identifiers = ["eks.amazonaws.com"]
@@ -57,16 +56,14 @@ resource "aws_eks_cluster" "eks" {
   ]
 }
 
-
 ############################################################
-# IAM ROLE FOR NODE GROUP
+# IAM ROLE FOR NODE GROUP (EC2 NODES)
 ############################################################
 
-data "aws_iam_policy_document" "eks_nodes_assume_role" {
+data "aws_iam_policy_document" "node_assume_role" {
   statement {
     effect  = "Allow"
     actions = ["sts:AssumeRole"]
-
     principals {
       type        = "Service"
       identifiers = ["ec2.amazonaws.com"]
@@ -76,29 +73,37 @@ data "aws_iam_policy_document" "eks_nodes_assume_role" {
 
 resource "aws_iam_role" "eks_node_role" {
   name               = "${var.project_name}-${var.env}-eks-node-role"
-  assume_role_policy = data.aws_iam_policy_document.eks_nodes_assume_role.json
+  assume_role_policy = data.aws_iam_policy_document.node_assume_role.json
 }
 
-resource "aws_iam_role_policy_attachment" "workerNodesPolicy" {
+resource "aws_iam_role_policy_attachment" "node_worker" {
   role       = aws_iam_role.eks_node_role.name
   policy_arn = "arn:aws:iam::aws:policy/AmazonEKSWorkerNodePolicy"
 }
 
-resource "aws_iam_role_policy_attachment" "cniPolicy" {
+resource "aws_iam_role_policy_attachment" "node_cni" {
   role       = aws_iam_role.eks_node_role.name
   policy_arn = "arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy"
 }
 
-resource "aws_iam_role_policy_attachment" "registryReadOnly" {
+resource "aws_iam_role_policy_attachment" "node_registry" {
   role       = aws_iam_role.eks_node_role.name
   policy_arn = "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly"
 }
 
-resource "aws_iam_role_policy_attachment" "ebs_csi" {
+resource "aws_iam_role_policy_attachment" "node_ebs_csi" {
   role       = aws_iam_role.eks_node_role.name
   policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonEBSCSIDriverPolicy"
 }
 
+############################################################
+# INSTANCE PROFILE FOR NODE GROUP  ← (المفتاح الذهبي)
+############################################################
+
+resource "aws_iam_instance_profile" "eks_node_profile" {
+  name = "${var.project_name}-${var.env}-node-instance-profile"
+  role = aws_iam_role.eks_node_role.name
+}
 
 ############################################################
 # EKS NODE GROUP
@@ -120,6 +125,7 @@ resource "aws_eks_node_group" "private_nodes" {
   instance_types = ["t3.medium"]
 
   depends_on = [
-    aws_eks_cluster.eks
+    aws_eks_cluster.eks,
+    aws_iam_instance_profile.eks_node_profile
   ]
 }
