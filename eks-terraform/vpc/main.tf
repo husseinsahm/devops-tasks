@@ -26,8 +26,6 @@ resource "aws_internet_gateway" "igw" {
 # NAT Gateway EIP
 ###############################
 resource "aws_eip" "nat_eip" {
-  vpc = true
-
   tags = {
     Name = "${var.project_name}-${var.env}-nat-eip"
   }
